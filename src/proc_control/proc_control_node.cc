@@ -53,10 +53,18 @@ ProcControlNode::ProcControlNode(const ros::NodeHandlePtr &nh) :
       nh->advertise<proc_control::PositionTarget>("/proc_control/current_error", 100);
   target_is_reached_publisher_ =
       nh->advertise<proc_control::TargetReached>("/proc_control/target_reached", 100);
-  set_global_target_server_ =
-      nh->advertiseService("/proc_control/set_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
-  set_local_target_server_ =
-      nh->advertiseService("/proc_control/set_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
+  set_xy_global_target_server_ =
+      nh->advertiseService("/proc_control/set_xy_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
+  set_xy_local_target_server_ =
+      nh->advertiseService("/proc_control/set_xy_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
+  set_z_global_target_server_ =
+      nh->advertiseService("/proc_control/set_z_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
+  set_z_local_target_server_ =
+      nh->advertiseService("/proc_control/set_z_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
+  set_yaw_global_target_server_ =
+      nh->advertiseService("/proc_control/set_yaw_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
+  set_yaw_local_target_server_ =
+      nh->advertiseService("/proc_control/set_yaw_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
   get_target_server_ =
       nh->advertiseService("/proc_control/get_target", &ProcControlNode::GetPositionTargetServiceCallback, this);
   enable_control_server_ =

@@ -78,10 +78,18 @@ class ProcControlNode {
                                     proc_control::EnableControlResponse &response);
   bool GetPositionTargetServiceCallback(proc_control::GetPositionTargetRequest &request,
                                         proc_control::GetPositionTargetResponse &response);
-  bool GlobalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
-                                   proc_control::SetPositionTargetResponse &response);
-  bool LocalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
-                                  proc_control::SetPositionTargetResponse &response);
+  bool GlobalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
+                                   proc_control::SetXYTargetResponse &response);
+  bool LocalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
+                                  proc_control::SetXYTargetResponse &response);
+  bool GlobalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
+                                   proc_control::SetZTargetResponse &response);
+  bool LocalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
+                                  proc_control::SetZTargetResponse &response);
+  bool GlobalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
+                                   proc_control::SetYawTargetResponse &response);
+  bool LocalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
+                                  proc_control::SetYawTargetResponse &response);
   bool EnableThrusterServiceCallback(proc_control::EnableThrustersRequest &request,
                                      proc_control::EnableThrustersResponse &response);
   bool ClearWaypointServiceCallback(proc_control::ClearWaypointRequest &request,
@@ -109,8 +117,12 @@ class ProcControlNode {
   ros::Publisher target_is_reached_publisher_;
   ros::Publisher error_publisher_;
 
-  ros::ServiceServer set_global_target_server_;
-  ros::ServiceServer set_local_target_server_;
+  ros::ServiceServer set_xy_global_target_server_;
+  ros::ServiceServer set_xy_local_target_server_;
+  ros::ServiceServer set_z_global_target_server_;
+  ros::ServiceServer set_z_local_target_server_;
+  ros::ServiceServer set_yaw_global_target_server_;
+  ros::ServiceServer set_yaw_local_target_server_;
   ros::ServiceServer get_target_server_;
   ros::ServiceServer enable_control_server_;
   ros::ServiceServer enable_thrusters_server_;
