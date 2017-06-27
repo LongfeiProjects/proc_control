@@ -264,6 +264,20 @@ bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetReq
 
 //-----------------------------------------------------------------------------
 //
+bool ProcControlNode::GlobalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
+                                                    proc_control::SetZTargetResponse &response) {
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+bool ProcControlNode::GlobalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
+                                                    proc_control::SetYawTargetResponse &response) {
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+//
 bool ProcControlNode::GetPositionTargetServiceCallback(proc_control::GetPositionTargetRequest &request,
                                                        proc_control::GetPositionTargetResponse &response) {
   response.X = targeted_position_[X];
@@ -358,6 +372,20 @@ bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequ
 
     PublishTargetedPosition();
     return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+bool ProcControlNode::LocalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
+                                                   proc_control::SetZTargetResponse &response) {
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+bool ProcControlNode::LocalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
+                                                   proc_control::SetYawTargetResponse &response) {
+  return true;
 }
 
 //-----------------------------------------------------------------------------
