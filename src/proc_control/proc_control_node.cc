@@ -92,15 +92,19 @@ void ProcControlNode::Control() {
 
   if(deltaTime_s > (0.0001f) ) {
     if (trajectory_surge.IsSplineCalculated()) {
-      targeted_position_[X] = trajectory_surge.GetPosition(targeted_position_[X], deltaTime_s);
+      targeted_position_[X] = trajectory_surge.GetPosition(world_position_[X], deltaTime_s);
     }
 
     if (trajectory_sway.IsSplineCalculated()) {
-      targeted_position_[Y] = trajectory_sway.GetPosition(targeted_position_[Y], deltaTime_s);
+      targeted_position_[Y] = trajectory_sway.GetPosition(world_position_[Y], deltaTime_s);
+    }
+
+    if (trajectory_heave.IsSplineCalculated()) {
+      targeted_position_[Z] = trajectory_heave.GetPosition(world_position_[Z], deltaTime_s);
     }
 
     if (trajectory_yaw.IsSplineCalculated()) {
-      targeted_position_[YAW] = trajectory_yaw.GetPosition(targeted_position_[YAW], deltaTime_s);
+      targeted_position_[YAW] = trajectory_yaw.GetPosition(world_position_[YAW], deltaTime_s);
     }
 
     // Calculate the error
@@ -240,7 +244,7 @@ bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetReq
 //
 bool ProcControlNode::GlobalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
                                                     proc_control::SetZTargetResponse &response) {
-  targeted_position_[X] = request.Z;
+  targeted_position_[Z] = request.Z;
 
   asked_position_[Z] = targeted_position_[Z];
 
