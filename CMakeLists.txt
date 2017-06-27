@@ -71,7 +71,9 @@ add_service_files(
      DIRECTORY srv
      FILES
      ClearWaypoint.srv
-     SetPositionTarget.srv
+     SetXYTarget.srv
+     SetZTarget.srv
+     SetYawTarget.srv
      GetPositionTarget.srv
      EnableThrusters.srv
      EnableControl.srv

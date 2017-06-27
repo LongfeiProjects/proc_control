@@ -39,7 +39,9 @@
 #include "proc_control/EnableThrusters.h"
 #include "proc_control/thruster/thruster_manager.h"
 #include "proc_control/algorithm/AlgorithmManager.h"
-#include "proc_control/SetPositionTarget.h"
+#include "proc_control/SetXYTarget.h"
+#include "proc_control/SetZTarget.h"
+#include "proc_control/SetYawTarget.h"
 #include "proc_control/GetPositionTarget.h"
 #include "proc_control/ClearWaypoint.h"
 

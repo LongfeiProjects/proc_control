@@ -27,7 +27,7 @@
 #include "proc_control_node.h"
 #include <eigen3/Eigen/Eigen>
 #include <eigen3/Eigen/Geometry>
-#include <proc_control/PositionTarget.h>
+
 #include <proc_control/TargetReached.h>
 #include <ldap.h>
 
@@ -54,17 +54,17 @@ ProcControlNode::ProcControlNode(const ros::NodeHandlePtr &nh) :
   target_is_reached_publisher_ =
       nh->advertise<proc_control::TargetReached>("/proc_control/target_reached", 100);
   set_xy_global_target_server_ =
-      nh->advertiseService("/proc_control/set_xy_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
+      nh->advertiseService("/proc_control/set_xy_global_target", &ProcControlNode::GlobalXYTargetServiceCallback, this);
   set_xy_local_target_server_ =
-      nh->advertiseService("/proc_control/set_xy_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
+      nh->advertiseService("/proc_control/set_xy_local_target", &ProcControlNode::LocalXYTargetServiceCallback, this);
   set_z_global_target_server_ =
-      nh->advertiseService("/proc_control/set_z_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
+      nh->advertiseService("/proc_control/set_z_global_target", &ProcControlNode::GlobalZTargetServiceCallback, this);
   set_z_local_target_server_ =
-      nh->advertiseService("/proc_control/set_z_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
+      nh->advertiseService("/proc_control/set_z_local_target", &ProcControlNode::LocalZTargetServiceCallback, this);
   set_yaw_global_target_server_ =
-      nh->advertiseService("/proc_control/set_yaw_global_target", &ProcControlNode::GlobalTargetServiceCallback, this);
+      nh->advertiseService("/proc_control/set_yaw_global_target", &ProcControlNode::GlobalYawTargetServiceCallback, this);
   set_yaw_local_target_server_ =
-      nh->advertiseService("/proc_control/set_yaw_local_target", &ProcControlNode::LocalTargetServiceCallback, this);
+      nh->advertiseService("/proc_control/set_yaw_local_target", &ProcControlNode::LocalYawTargetServiceCallback, this);
   get_target_server_ =
       nh->advertiseService("/proc_control/get_target", &ProcControlNode::GetPositionTargetServiceCallback, this);
   enable_control_server_ =
@@ -227,14 +227,10 @@ void ProcControlNode::KeypadCallback(const provider_keypad::Keypad::ConstPtr &ke
 
 //-----------------------------------------------------------------------------
 //
-bool ProcControlNode::GlobalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
-                                                  proc_control::SetPositionTargetResponse &response) {
+bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
+                                                  proc_control::SetXYTargetResponse &response) {
   targeted_position_[0] = request.X;
   targeted_position_[1] = request.Y;
-  targeted_position_[2] = request.Z;
-  targeted_position_[3] = request.ROLL;
-  targeted_position_[4] = request.PITCH;
-  targeted_position_[5] = request.YAW;
 
   asked_position_ = targeted_position_;
 
@@ -334,15 +330,15 @@ bool ProcControlNode::ClearWaypointServiceCallback(proc_control::ClearWaypointRe
 
 //-----------------------------------------------------------------------------
 //
-bool ProcControlNode::LocalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
-                                                 proc_control::SetPositionTargetResponse &response) {
+bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
+                                                 proc_control::SetXYTargetResponse &response) {
     // We simply use the current yaw to rotate the translation into the good world position and add it to the position
     Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(world_position_[YAW]), 0, 0));
-    Eigen::Vector3d translation(request.X, request.Y, request.Z), original_position(world_position_[X],
+    Eigen::Vector3d translation(request.X, request.Y, 0), original_position(world_position_[X],
                                                                                     world_position_[Y],
                                                                                     world_position_[Z]);
 
-    double rot = request.YAW;
+    double rot = 0;
 
     if (rot < 0){
 
