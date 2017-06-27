@@ -91,25 +91,16 @@ void ProcControlNode::Control() {
   double deltaTime_s = double(std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count())/(double(1E9));
 
   if(deltaTime_s > (0.0001f) ) {
-    proc_control::PositionTarget msg_target;
-    msg_target.X = targeted_position_[0];
-    msg_target.Y = targeted_position_[1];
-    msg_target.Z = targeted_position_[2];
-    msg_target.ROLL = targeted_position_[3];
-    msg_target.PITCH = targeted_position_[4];
-    msg_target.YAW = targeted_position_[5];
-    debug_target_publisher_.publish(msg_target);
-
     if (trajectory_surge.IsSplineCalculated()) {
-      targeted_position_[X] = trajectory_surge.GetPosition(world_position_[X], deltaTime_s);
+      targeted_position_[X] = trajectory_surge.GetPosition(targeted_position_[X], deltaTime_s);
     }
 
     if (trajectory_sway.IsSplineCalculated()) {
-      targeted_position_[Y] = trajectory_sway.GetPosition(world_position_[Y], deltaTime_s);
+      targeted_position_[Y] = trajectory_sway.GetPosition(targeted_position_[Y], deltaTime_s);
     }
 
     if (trajectory_yaw.IsSplineCalculated()) {
-      targeted_position_[YAW] = trajectory_yaw.GetPosition(world_position_[YAW], deltaTime_s);
+      targeted_position_[YAW] = trajectory_yaw.GetPosition(targeted_position_[YAW], deltaTime_s);
     }
 
     // Calculate the error
@@ -159,6 +150,15 @@ void ProcControlNode::Control() {
     // Process the actuation
     std::array<double, 8> thrust_force = thruster_manager_.Commit(actuation_lin, actuation_rot);
   }
+
+  proc_control::PositionTarget msg_target;
+  msg_target.X = targeted_position_[0];
+  msg_target.Y = targeted_position_[1];
+  msg_target.Z = targeted_position_[2];
+  msg_target.ROLL = targeted_position_[3];
+  msg_target.PITCH = targeted_position_[4];
+  msg_target.YAW = targeted_position_[5];
+  debug_target_publisher_.publish(msg_target);
 
   last_time_ = now_time;
 }
