@@ -1,5 +1,5 @@
 /**
- * \file	trajectory_yaw.cc
+ * \file	trajectory.cc
  * \author Francis Masse <francis.masse05@gmail.com>
  * \date	25/06/17
  *
@@ -23,14 +23,15 @@
  * along with S.O.N.I.A. AUV software. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "trajectory_yaw.h"
+#include <cmath>
+#include "trajectory.h"
 
 //==============================================================================
 // C / D T O R S   S E C T I O N
 
 //------------------------------------------------------------------------------
 //
-TrajectoryYaw::TrajectoryYaw() {
+Trajectory::Trajectory() {
   is_spline_calculated = false;
   is_position_reach = true;
   spline_time = 0;
@@ -38,24 +39,24 @@ TrajectoryYaw::TrajectoryYaw() {
 
 //------------------------------------------------------------------------------
 //
-TrajectoryYaw::~TrajectoryYaw() {}
+Trajectory::~Trajectory() {}
 
 //==============================================================================
 // M E T H O D   S E C T I O N
 
 //-----------------------------------------------------------------------------
 //
-bool TrajectoryYaw::IsSplineCalculated() { return is_spline_calculated; }
+bool Trajectory::IsSplineCalculated() { return is_spline_calculated; }
 
 //-----------------------------------------------------------------------------
 //
-void TrajectoryYaw::SetTargetPosition(double target_position) {
+void Trajectory::SetTargetPosition(double target_position) {
   this->target_position = target_position;
 }
 
 //-----------------------------------------------------------------------------
 //
-void TrajectoryYaw::CalculateSpline(double current_position, double current_velocity,
+void Trajectory::CalculateSpline(double current_position, double current_velocity,
                                     double target_velocity) {
   hermite_spline_solution[0] = current_position;
   hermite_spline_solution[1] = current_velocity;
@@ -71,7 +72,7 @@ void TrajectoryYaw::CalculateSpline(double current_position, double current_velo
 
 //-----------------------------------------------------------------------------
 //
-double TrajectoryYaw::GetPosition(double current_position, double dt) {
+double Trajectory::GetPosition(double current_position, double dt) {
   double position = 0.0;
   double spline_time_squared = spline_time * spline_time;
   double spline_time_cubed = spline_time_squared * spline_time;
@@ -90,7 +91,7 @@ double TrajectoryYaw::GetPosition(double current_position, double dt) {
         hermite_spline_solution[3] * spline_time_cubed;
   }
 
-  if (fabs(position - target_position) < 0.1) {
+  if (std::fabs(position - target_position) < 0.1) {
     is_position_reach = true;
   }
 

@@ -1,5 +1,5 @@
 /**
- * \file	trajectory_yaw.h
+ * \file	trajectory.h
  * \author Francis Masse <francis.masse05@gmail.com>
  * \date	25/06/17
  *
@@ -26,15 +26,13 @@
 #ifndef PROC_CONTROL_TRAJECTORY_YAW_H
 #define PROC_CONTROL_TRAJECTORY_YAW_H
 
-#include <cmath>
-
-class TrajectoryYaw {
+class Trajectory {
  public:
   //==========================================================================
   // P U B L I C   C / D T O R S
 
-  TrajectoryYaw();
-  ~TrajectoryYaw();
+  Trajectory();
+  ~Trajectory();
 
   //==========================================================================
   // P U B L I C   M E T H O D S

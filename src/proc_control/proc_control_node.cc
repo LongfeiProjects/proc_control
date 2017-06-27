@@ -85,12 +85,6 @@ ProcControlNode::~ProcControlNode() { }
 //-----------------------------------------------------------------------------
 //
 void ProcControlNode::Control() {
-//  printf("Current Position: %10.4f, %10.4f, %10.4f, %10.4f, %10.4f, %10.4f \n",
-//         world_position_[0], world_position_[1], world_position_[2],
-//         world_position_[3], world_position_[4], world_position_[5]);
-//  printf("Target Position:  %10.4f, %10.4f, %10.4f, %10.4f, %10.4f, %10.4f \n",
-//         targeted_position_[0], targeted_position_[1], targeted_position_[2],
-//         targeted_position_[3], targeted_position_[4], targeted_position_[5]);
   std::chrono::steady_clock::time_point now_time = std::chrono::steady_clock::now();
   auto diff = now_time - last_time_;
 
@@ -142,8 +136,6 @@ void ProcControlNode::Control() {
     error_.YAW = error[5];
 
     error_publisher_.publish(error_);
-  //  printf("Local error: %10.4f, %10.4f, %10.4f, %10.4f, %10.4f, %10.4f \n",
-  //         error[0], error[1], error[2], error[3], error[4], error[5]);
 
     // Handle the is target reached message
     proc_control::TargetReached msg_target_reached;
@@ -152,9 +144,7 @@ void ProcControlNode::Control() {
 
     // Calculate required actuation
     std::array<double, 6> actuation = algorithm_manager_.GetActuationForError(error);
-  //  printf("Actuation : %10.4f, %10.4f, %10.4f, %10.4f, %10.4f, %10.4f \n",
-  //         actuation[X], actuation[Y], actuation[Z],
-  //         actuation[ROLL], actuation[PITCH], actuation[YAW]);
+
     std::array<double, 3> actuation_lin = {actuation[X], actuation[Y], actuation[Z]};
     std::array<double, 3> actuation_rot = {actuation[ROLL], actuation[PITCH], actuation[YAW]};
     for (int i = 0; i < 3; i++) {
@@ -168,12 +158,9 @@ void ProcControlNode::Control() {
 
     // Process the actuation
     std::array<double, 8> thrust_force = thruster_manager_.Commit(actuation_lin, actuation_rot);
-  //  printf("Thrust : T1: %10.4f, T2: %10.4f, T3: %10.4f, T4: %10.4f T5: %10.4f, T6: %10.4f, T7: %10.4f, T8: %10.4f \n",
-  //         thrust_force[0], thrust_force[1], thrust_force[2], thrust_force[3],
-  //         thrust_force[4], thrust_force[5], thrust_force[6], thrust_force[7]);
   }
 
-  last_time_ = now_time;//nowTime;
+  last_time_ = now_time;
 }
 
 //-----------------------------------------------------------------------------
@@ -221,18 +208,17 @@ void ProcControlNode::KeypadCallback(const provider_keypad::Keypad::ConstPtr &ke
   if(targeted_position_[YAW] >= 360) {
     targeted_position_[YAW] = 360 - targeted_position_[YAW];
   }
-
-  PublishTargetedPosition();
 }
 
 //-----------------------------------------------------------------------------
 //
 bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
                                                   proc_control::SetXYTargetResponse &response) {
-  targeted_position_[0] = request.X;
-  targeted_position_[1] = request.Y;
+  targeted_position_[X] = request.X;
+  targeted_position_[Y] = request.Y;
 
-  asked_position_ = targeted_position_;
+  asked_position_[X] = targeted_position_[X];
+  asked_position_[Y] = targeted_position_[Y];
 
   double error_x = targeted_position_[X] - world_position_[X];
   if (std::fabs(error_x) > 0.1) {
@@ -245,6 +231,36 @@ bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetReq
     trajectory_sway.SetTargetPosition(targeted_position_[Y]);
     trajectory_sway.CalculateSpline(world_position_[Y], 0, 0);
   }
+
+  PublishTargetedPosition();
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+bool ProcControlNode::GlobalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
+                                                    proc_control::SetZTargetResponse &response) {
+  targeted_position_[X] = request.Z;
+
+  asked_position_[Z] = targeted_position_[Z];
+
+  double error_z = targeted_position_[Z] - world_position_[Z];
+  if (std::fabs(error_z) > 0.1) {
+    trajectory_heave.SetTargetPosition(targeted_position_[Z]);
+    trajectory_heave.CalculateSpline(world_position_[Z], 0, 0);
+  }
+
+  PublishTargetedPosition();
+  return true;
+}
+
+//-----------------------------------------------------------------------------
+//
+bool ProcControlNode::GlobalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
+                                                    proc_control::SetYawTargetResponse &response) {
+  targeted_position_[YAW] = request.YAW;
+
+  asked_position_[YAW] = targeted_position_[YAW];
 
   double error_yaw = targeted_position_[YAW] - world_position_[YAW];
   if (std::fabs(error_yaw) > 180.0) {
@@ -264,20 +280,6 @@ bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetReq
 
 //-----------------------------------------------------------------------------
 //
-bool ProcControlNode::GlobalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
-                                                    proc_control::SetZTargetResponse &response) {
-  return true;
-}
-
-//-----------------------------------------------------------------------------
-//
-bool ProcControlNode::GlobalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
-                                                    proc_control::SetYawTargetResponse &response) {
-  return true;
-}
-
-//-----------------------------------------------------------------------------
-//
 bool ProcControlNode::GetPositionTargetServiceCallback(proc_control::GetPositionTargetRequest &request,
                                                        proc_control::GetPositionTargetResponse &response) {
   response.X = targeted_position_[X];
@@ -287,7 +289,6 @@ bool ProcControlNode::GetPositionTargetServiceCallback(proc_control::GetPosition
   response.PITCH = targeted_position_[PITCH];
   response.YAW = targeted_position_[YAW];
 
-  PublishTargetedPosition();
   return true;
 }
 
@@ -346,38 +347,36 @@ bool ProcControlNode::ClearWaypointServiceCallback(proc_control::ClearWaypointRe
 //
 bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
                                                  proc_control::SetXYTargetResponse &response) {
-    // We simply use the current yaw to rotate the translation into the good world position and add it to the position
-    Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(world_position_[YAW]), 0, 0));
-    Eigen::Vector3d translation(request.X, request.Y, 0), original_position(world_position_[X],
-                                                                                    world_position_[Y],
-                                                                                    world_position_[Z]);
+  // We simply use the current yaw to rotate the translation into the good world position and add it to the position
+  Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(world_position_[YAW]), 0, 0));
+  Eigen::Vector3d translation(request.X, request.Y, world_position_[Z]), original_position(world_position_[X],
+                                                                                  world_position_[Y],
+                                                                                  world_position_[Z]);
 
-    double rot = 0;
+  Eigen::Vector3d final_pos = original_position + (original_rotation * translation);
 
-    if (rot < 0){
+  targeted_position_[X] = final_pos[X];
+  targeted_position_[Y] = final_pos[Y];
 
-        rot += 360;
-
-    }
-
-    rot += world_position_[YAW];
-
-    Eigen::Vector3d final_pos = original_position + (original_rotation * translation);
-    Eigen::Vector3d final_rot(world_position_[ROLL], world_position_[PITCH], fmod(rot, 360.0));
-
-    for (int i = 0; i < 3; i++) {
-        targeted_position_[i] = final_pos[i];
-        targeted_position_[i + 3] = final_rot[i];
-    }
-
-    PublishTargetedPosition();
-    return true;
+  PublishTargetedPosition();
+  return true;
 }
 
 //-----------------------------------------------------------------------------
 //
 bool ProcControlNode::LocalZTargetServiceCallback(proc_control::SetZTargetRequest &request,
                                                    proc_control::SetZTargetResponse &response) {
+  // We simply use the current yaw to rotate the translation into the good world position and add it to the position
+  Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(world_position_[YAW]), 0, 0));
+  Eigen::Vector3d translation(world_position_[X], world_position_[Y], request.Z), original_position(world_position_[X],
+                                                                                           world_position_[Y],
+                                                                                           world_position_[Z]);
+
+  Eigen::Vector3d final_pos = original_position + (original_rotation * translation);
+
+  targeted_position_[Z] = final_pos[Z];
+
+  PublishTargetedPosition();
   return true;
 }
 
@@ -385,6 +384,19 @@ bool ProcControlNode::LocalZTargetServiceCallback(proc_control::SetZTargetReques
 //
 bool ProcControlNode::LocalYawTargetServiceCallback(proc_control::SetYawTargetRequest &request,
                                                    proc_control::SetYawTargetResponse &response) {
+  double rot = request.YAW;
+
+  if (rot < 0){
+    rot += 360;
+  }
+
+  rot += world_position_[YAW];
+
+  Eigen::Vector3d final_rot(world_position_[ROLL], world_position_[PITCH], fmod(rot, 360.0));
+
+  targeted_position_[YAW] = final_rot[YAW];
+
+  PublishTargetedPosition();
   return true;
 }
 
