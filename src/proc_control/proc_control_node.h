@@ -72,7 +72,7 @@ class ProcControlNode {
   //==========================================================================
   // P R I V A T E   M E T H O D S
 
-  void PublishTargetedPosition();
+  void PublishAskedPosition();
 
   void OdomCallback(const nav_msgs::Odometry::ConstPtr &odo_in);
   void KeypadCallback(const provider_keypad::Keypad::ConstPtr &keypad_in);
@@ -114,8 +114,8 @@ class ProcControlNode {
   ros::Subscriber target_odometry_subscriber_;
   ros::Subscriber keypad_subscriber_;
 
-  ros::Publisher target_publisher_;
-  ros::Publisher debug_target_publisher_;
+  ros::Publisher target_asked_publisher_;
+  ros::Publisher target_current_publisher_;
   ros::Publisher target_is_reached_publisher_;
   ros::Publisher error_publisher_;
 
@@ -138,10 +138,10 @@ class ProcControlNode {
   OdometryInfo asked_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
   std::array<bool, 6> enable_control_;
 
-  Trajectory trajectory_yaw;
   Trajectory trajectory_surge;
   Trajectory trajectory_sway;
   Trajectory trajectory_heave;
+  Trajectory trajectory_yaw;
 
   int stability_count_;
   std::chrono::steady_clock::time_point last_time_;
