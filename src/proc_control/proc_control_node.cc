@@ -348,7 +348,7 @@ bool ProcControlNode::ClearWaypointServiceCallback(proc_control::ClearWaypointRe
 bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
                                                  proc_control::SetXYTargetResponse &response) {
   // We simply use the current yaw to rotate the translation into the good world position and add it to the position
-  Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(world_position_[YAW]), 0, 0));
+  Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(315), 0, 0));
   Eigen::Vector3d translation(request.X, request.Y, world_position_[Z]), original_position(world_position_[X],
                                                                                   world_position_[Y],
                                                                                   world_position_[Z]);
@@ -357,6 +357,9 @@ bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequ
 
   targeted_position_[X] = final_pos[X];
   targeted_position_[Y] = final_pos[Y];
+
+  asked_position_[X] = targeted_position_[X];
+  asked_position_[Y] = targeted_position_[Y];
 
   PublishAskedPosition();
   return true;
@@ -375,6 +378,8 @@ bool ProcControlNode::LocalZTargetServiceCallback(proc_control::SetZTargetReques
   Eigen::Vector3d final_pos = original_position + (original_rotation * translation);
 
   targeted_position_[Z] = final_pos[Z];
+
+  asked_position_[Z] = targeted_position_[Z];
 
   PublishAskedPosition();
   return true;
@@ -395,6 +400,8 @@ bool ProcControlNode::LocalYawTargetServiceCallback(proc_control::SetYawTargetRe
   Eigen::Vector3d final_rot(world_position_[ROLL], world_position_[PITCH], fmod(rot, 360.0));
 
   targeted_position_[YAW] = final_rot[YAW];
+
+  asked_position_[YAW] = targeted_position_[YAW];
 
   PublishAskedPosition();
   return true;
