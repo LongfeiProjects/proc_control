@@ -192,7 +192,7 @@ class AUVSimulation:
         return acceleration
 
     def thrust_to_acceleration_depth(self, thrust):
-        acceleration = thrust / ((sub_weight * 9.8) - buoyancy)
+        acceleration = (thrust + 15.6) / (sub_weight * 9.8 * 2)
 
         if thrust == 0:
             acceleration = 0.0
