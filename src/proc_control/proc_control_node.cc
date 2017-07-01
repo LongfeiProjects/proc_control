@@ -100,7 +100,7 @@ void ProcControlNode::Control() {
     }
 
     if (trajectory_heave.IsSplineCalculated()) {
-      targeted_position_[Z] = trajectory_yaw.GetPosition(targeted_position_[Z], deltaTime_s);
+      targeted_position_[Z] = trajectory_heave.GetPosition(targeted_position_[Z], deltaTime_s);
     }
 
     if (trajectory_yaw.IsSplineCalculated()) {
