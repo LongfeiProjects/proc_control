@@ -22,7 +22,7 @@ sub_thruster_distance = 0.365
 velocity_max = 2
 acceleration_max = 0.5
 friction_factor = 0.2
-meterOfWaterTodBar = 0.980638
+meterOfWaterToBar = 0.09807
 rho = 998.68
 buoyancy = rho * sub_volume * 9.8
 
@@ -85,15 +85,15 @@ class AUVSimulation:
             self.yaw_velocity = self.acceleration_to_velocity(yaw_acceleration, 1.0/self.FREQUENCY, self.yaw_velocity)
             self.yaw_angle = self.velocity_to_angle(self.yaw_velocity, 1.0/self.FREQUENCY, self.yaw_angle)
 
-            pitch_thrust = sub_thruster_distance*thrust[4] - sub_thruster_distance*thrust[5] - \
-                         sub_thruster_distance*thrust[6] + sub_thruster_distance*thrust[7]
-
-            pitch_acceleration = self.thrust_to_acceleration_yaw(pitch_thrust)
-            self.pitch_velocity = self.acceleration_to_velocity(pitch_acceleration, 1.0/self.FREQUENCY, self.pitch_velocity)
-            self.pitch_angle = self.velocity_to_angle(self.pitch_velocity, 1.0/self.FREQUENCY, self.pitch_angle)
+            # pitch_thrust = sub_thruster_distance*thrust[4] - sub_thruster_distance*thrust[5] - \
+            #              sub_thruster_distance*thrust[6] + sub_thruster_distance*thrust[7]
+            #
+            # pitch_acceleration = self.thrust_to_acceleration_yaw(pitch_thrust)
+            # self.pitch_velocity = self.acceleration_to_velocity(pitch_acceleration, 1.0/self.FREQUENCY, self.pitch_velocity)
+            # self.pitch_angle = self.velocity_to_angle(self.pitch_velocity, 1.0/self.FREQUENCY, self.pitch_angle)
 
             qx = quaternion_about_axis(0, self.xaxis)
-            qy = quaternion_about_axis(math.radians(self.pitch_angle), self.yaxis)
+            qy = quaternion_about_axis(0, self.yaxis)
             qz = quaternion_about_axis(math.radians(self.yaw_angle), self.zaxis)
             q = quaternion_multiply(qx, qy)
             q = quaternion_multiply(q, qz)
@@ -139,7 +139,7 @@ class AUVSimulation:
 
             dvl_twist = TwistStamped()
             dvl_twist.header.stamp = rospy.get_rostime()
-            dvl_twist.header.frame_id = "BODY"
+            dvl_twist.header.frame_id = "NED"
             dvl_twist.twist.linear.x = x_vel
             dvl_twist.twist.linear.y = y_vel
             dvl_twist.twist.linear.z = self.z_velocity
@@ -192,7 +192,7 @@ class AUVSimulation:
         return acceleration
 
     def thrust_to_acceleration_depth(self, thrust):
-        acceleration = thrust / ((sub_weight * 9.8) - buoyancy)
+        acceleration = (thrust + 15.6) / (sub_weight * 9.8 * 2)
 
         if thrust == 0:
             acceleration = 0.0
@@ -235,7 +235,7 @@ class AUVSimulation:
         return depth
 
     def depth_to_bar(self, depth, bar):
-        return depth/meterOfWaterTodBar
+        return depth/meterOfWaterToBar
 
     def velocity_to_angle(self, velocity, dt, angle):
         angle_second = (velocity * .05 / sub_circumference) * 360

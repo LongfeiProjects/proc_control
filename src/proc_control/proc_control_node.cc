@@ -45,9 +45,9 @@ ProcControlNode::ProcControlNode(const ros::NodeHandlePtr &nh) :
       nh->subscribe("/proc_navigation/odom", 100, &ProcControlNode::OdomCallback, this);
   keypad_subscriber_ =
       nh->subscribe("/provider_keypad/Keypad", 100, &ProcControlNode::KeypadCallback, this);
-  target_publisher_ =
+  target_asked_publisher_ =
       nh->advertise<proc_control::PositionTarget>("/proc_control/current_target", 100);
-  debug_target_publisher_ =
+  target_current_publisher_ =
       nh->advertise<proc_control::PositionTarget>("/proc_control/debug_current_target", 100);
   error_publisher_ =
       nh->advertise<proc_control::PositionTarget>("/proc_control/current_error", 100);
@@ -103,6 +103,10 @@ void ProcControlNode::Control() {
       targeted_position_[Z] = trajectory_heave.GetPosition(world_position_[Z], deltaTime_s);
     }
 
+    if (trajectory_heave.IsSplineCalculated()) {
+      targeted_position_[Z] = trajectory_yaw.GetPosition(targeted_position_[Z], deltaTime_s);
+    }
+
     if (trajectory_yaw.IsSplineCalculated()) {
       targeted_position_[YAW] = trajectory_yaw.GetPosition(world_position_[YAW], deltaTime_s);
     }
@@ -156,39 +160,39 @@ void ProcControlNode::Control() {
   }
 
   proc_control::PositionTarget msg_target;
-  msg_target.X = targeted_position_[0];
-  msg_target.Y = targeted_position_[1];
-  msg_target.Z = targeted_position_[2];
-  msg_target.ROLL = targeted_position_[3];
-  msg_target.PITCH = targeted_position_[4];
-  msg_target.YAW = targeted_position_[5];
-  debug_target_publisher_.publish(msg_target);
+  msg_target.X = targeted_position_[X];
+  msg_target.Y = targeted_position_[Y];
+  msg_target.Z = targeted_position_[Z];
+  msg_target.ROLL = targeted_position_[ROLL];
+  msg_target.PITCH = targeted_position_[PITCH];
+  msg_target.YAW = targeted_position_[YAW];
+  target_current_publisher_.publish(msg_target);
 
   last_time_ = now_time;
 }
 
 //-----------------------------------------------------------------------------
 //
-void ProcControlNode::PublishTargetedPosition() {
+void ProcControlNode::PublishAskedPosition() {
   proc_control::PositionTarget msg;
-  msg.X = targeted_position_[0];
-  msg.Y = targeted_position_[1];
-  msg.Z = targeted_position_[2];
-  msg.ROLL = targeted_position_[3];
-  msg.PITCH = targeted_position_[4];
-  msg.YAW = targeted_position_[5];
-  target_publisher_.publish(msg);
+  msg.X = asked_position_[X];
+  msg.Y = asked_position_[Y];
+  msg.Z = asked_position_[Z];
+  msg.ROLL = asked_position_[ROLL];
+  msg.PITCH = asked_position_[PITCH];
+  msg.YAW = asked_position_[YAW];
+  target_asked_publisher_.publish(msg);
 }
 
 //-----------------------------------------------------------------------------
 //
 void ProcControlNode::OdomCallback(const nav_msgs::Odometry::ConstPtr &odo_in) {
-  world_position_[0] = odo_in->pose.pose.position.x;
-  world_position_[1] = odo_in->pose.pose.position.y;
-  world_position_[2] = odo_in->pose.pose.position.z;
-  world_position_[3] = odo_in->pose.pose.orientation.x;
-  world_position_[4] = odo_in->pose.pose.orientation.y;
-  world_position_[5] = odo_in->pose.pose.orientation.z;
+  world_position_[X] = odo_in->pose.pose.position.x;
+  world_position_[Y] = odo_in->pose.pose.position.y;
+  world_position_[Z] = odo_in->pose.pose.position.z;
+  world_position_[ROLL] = odo_in->pose.pose.orientation.x;
+  world_position_[PITCH] = odo_in->pose.pose.orientation.y;
+  world_position_[YAW] = odo_in->pose.pose.orientation.z;
 }
 
 //-----------------------------------------------------------------------------
@@ -236,7 +240,7 @@ bool ProcControlNode::GlobalXYTargetServiceCallback(proc_control::SetXYTargetReq
     trajectory_sway.CalculateSpline(world_position_[Y], 0, 0);
   }
 
-  PublishTargetedPosition();
+  PublishAskedPosition();
   return true;
 }
 
@@ -254,7 +258,7 @@ bool ProcControlNode::GlobalZTargetServiceCallback(proc_control::SetZTargetReque
     trajectory_heave.CalculateSpline(world_position_[Z], 0, 0);
   }
 
-  PublishTargetedPosition();
+  PublishAskedPosition();
   return true;
 }
 
@@ -278,7 +282,7 @@ bool ProcControlNode::GlobalYawTargetServiceCallback(proc_control::SetYawTargetR
     trajectory_yaw.CalculateSpline(world_position_[YAW], 0, 0);
   }
 
-  PublishTargetedPosition();
+  PublishAskedPosition();
   return true;
 }
 
@@ -343,7 +347,7 @@ bool ProcControlNode::ClearWaypointServiceCallback(proc_control::ClearWaypointRe
     targeted_position_[i + 3] = world_position_[i + 3];
   }
 
-  PublishTargetedPosition();
+  PublishAskedPosition();
   return true;
 }
 
@@ -352,7 +356,7 @@ bool ProcControlNode::ClearWaypointServiceCallback(proc_control::ClearWaypointRe
 bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequest &request,
                                                  proc_control::SetXYTargetResponse &response) {
   // We simply use the current yaw to rotate the translation into the good world position and add it to the position
-  Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(world_position_[YAW]), 0, 0));
+  Eigen::Matrix3d original_rotation = EulerToRot(Eigen::Vector3d(DegreeToRadian(315), 0, 0));
   Eigen::Vector3d translation(request.X, request.Y, world_position_[Z]), original_position(world_position_[X],
                                                                                   world_position_[Y],
                                                                                   world_position_[Z]);
@@ -362,7 +366,10 @@ bool ProcControlNode::LocalXYTargetServiceCallback(proc_control::SetXYTargetRequ
   targeted_position_[X] = final_pos[X];
   targeted_position_[Y] = final_pos[Y];
 
-  PublishTargetedPosition();
+  asked_position_[X] = targeted_position_[X];
+  asked_position_[Y] = targeted_position_[Y];
+
+  PublishAskedPosition();
   return true;
 }
 
@@ -380,7 +387,9 @@ bool ProcControlNode::LocalZTargetServiceCallback(proc_control::SetZTargetReques
 
   targeted_position_[Z] = final_pos[Z];
 
-  PublishTargetedPosition();
+  asked_position_[Z] = targeted_position_[Z];
+
+  PublishAskedPosition();
   return true;
 }
 
@@ -400,7 +409,9 @@ bool ProcControlNode::LocalYawTargetServiceCallback(proc_control::SetYawTargetRe
 
   targeted_position_[YAW] = final_rot[YAW];
 
-  PublishTargetedPosition();
+  asked_position_[YAW] = targeted_position_[YAW];
+
+  PublishAskedPosition();
   return true;
 }
 
