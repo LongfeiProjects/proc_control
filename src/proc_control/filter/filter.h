@@ -26,22 +26,48 @@
 #ifndef PROC_CONTROL_FILTER_H
 #define PROC_CONTROL_FILTER_H
 
+#include <math.h>
+#include <cstdlib>
+
 class Filter {
  public:
   //==========================================================================
+  // C O N S T  ,  T Y P E D E F   A N D   E N U M
+
+  enum FilterType {LowPassFilter, HighPassFilter};
+
+  //==========================================================================
   // P U B L I C   C / D T O R S
 
-  Filter();
+  Filter(FilterType filter_type, int number_of_taps, double fs, double fx);
   ~Filter();
 
   //==========================================================================
   // P U B L I C   M E T H O D S
 
+  void Init();
+  double Sample(double data_sample);
+  int GetErrorFlag(){return error_flag;};
+  void GetTaps( double *taps );
 
  private:
   //==========================================================================
+  // P R I V A T E   M E T H O D S
+
+  void DesignLowPassFilter();
+  void DesignHighPassFilter();
+
+  //==========================================================================
   // P R I V A T E   M E M B E R S
 
+  FilterType type;
+  int number_of_taps;
+  int error_flag;
+  double Fs;
+  double Fx;
+  double lambda;
+  double *taps;
+  double *sr;
 };
 
 #endif //PROC_CONTROL_FILTER_H

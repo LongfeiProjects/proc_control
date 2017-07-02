@@ -40,7 +40,8 @@ namespace proc_control {
 //
 ProcControlNode::ProcControlNode(const ros::NodeHandlePtr &nh) :
     nh_(nh),
-    stability_count_(0) {
+    stability_count_(0),
+    yaw_filter(Filter::LowPassFilter, 10, 0.001, 0.001) {
   navigation_odom_subscriber_ =
       nh->subscribe("/proc_navigation/odom", 100, &ProcControlNode::OdomCallback, this);
   keypad_subscriber_ =
@@ -69,7 +70,9 @@ ProcControlNode::ProcControlNode(const ros::NodeHandlePtr &nh) :
 
 //------------------------------------------------------------------------------
 //
-ProcControlNode::~ProcControlNode() { }
+ProcControlNode::~ProcControlNode() {
+  delete &yaw_filter;
+}
 
 //==============================================================================
 // M E T H O D   S E C T I O N

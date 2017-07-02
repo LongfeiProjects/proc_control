@@ -44,6 +44,7 @@
 #include "proc_control/ClearWaypoint.h"
 
 #include "proc_control/trajectory/trajectory.h"
+#include "proc_control/filter/filter.h"
 
 namespace proc_control {
 
@@ -130,6 +131,9 @@ class ProcControlNode {
   Trajectory trajectory_heave;
 
   int stability_count_;
+
+  Filter yaw_filter;
+
   std::chrono::steady_clock::time_point last_time_;
 };
 
