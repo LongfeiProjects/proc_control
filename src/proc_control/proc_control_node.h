@@ -1,7 +1,8 @@
 /**
  * \file	proc_control_node.h
- * \author	Olivier Lavoie <olavoie9507@gmail.com>
- * \date	10/21/17
+ * \author	Jeremie St-Jules <jeremie.st.jules.prevost@gmail.com>
+ * \coauthor Francis Masse <francis.masse05@gmail.com>
+ * \date	10/17/16
  *
  * \copyright Copyright (c) 2017 S.O.N.I.A. AUV All rights reserved.
  *
@@ -23,16 +24,16 @@
  * along with S.O.N.I.A. AUV software. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PROC_CONTROL_CONTROL_NODE_H
-#define PROC_CONTROL_CONTROL_NODE_H
+#ifndef PROC_CONTROL_CONTROL_SYSTEM_H
+#define PROC_CONTROL_CONTROL_SYSTEM_H
 
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
 #include <provider_keypad/Keypad.h>
-#include <mutex>
 
 #include <proc_control/PositionTarget.h>
+#include <eigen3/Eigen/Eigen>
 #include <chrono>
 
 #include "proc_control/EnableControl.h"
@@ -47,97 +48,116 @@
 
 #include "proc_control/trajectory/trajectory.h"
 #include "proc_control/algorithm/Control_AUV.h"
-#include "Transformation/Transformation.h"
 
-namespace proc_control{
+#include <mutex>
 
-    class ProcControlNode{
-    public:
-        typedef std::array<double, 6> OdomInfo;
+namespace proc_control {
 
-        //==============================================================================
-        // C / D T O R S   S E C T I O N
-        //------------------------------------------------------------------------------
+class ProcControlNode {
+ public:
+  //==========================================================================
+  // C O N S T  ,  T Y P E D E F   A N D   E N U M
 
-        ProcControlNode(const ros::NodeHandlePtr &nh);
+  static constexpr double DegreeToRad = M_PI / 180.0f;
+  typedef std::array<double, 6> OdometryInfo;
 
-        ~ProcControlNode();
+  //==========================================================================
+  // P U B L I C   C / D T O R S
 
-        //==========================================================================
-        // P U B L I C   M E T H O D S
+  ProcControlNode(const ros::NodeHandlePtr &nh);
+  ~ProcControlNode();
 
-        void Control_loop();
+  //==========================================================================
+  // P U B L I C   M E T H O D S
 
-        void odometry_callback(const nav_msgs::Odometry::ConstPtr &odom_in);
-        void kill_switch_callback(const provider_kill_mission::KillSwitchMsg::ConstPtr &state_in);
+  void Control();
 
-        void current_target_position_publisher();
+ private:
+  //==========================================================================
+  // P R I V A T E   M E T H O D S
 
-        bool set_global_target_position_callback(proc_control::SetPositionTargetRequest &request, proc_control::SetPositionTargetResponse &response);
-        bool set_local_target_position_callback(proc_control::SetPositionTargetRequest &request, proc_control::SetPositionTargetResponse &response);
+  void PublishTargetedPosition();
 
-        bool set_global_target_velocity_callback(proc_control::SetPositionTargetRequest &request, proc_control::SetPositionTargetResponse &response);
-        bool set_local_target_velocity_callback(proc_control::SetPositionTargetRequest &request, proc_control::SetPositionTargetResponse &response);
+  void SetTargetCallback(const geometry_msgs::Pose::ConstPtr &target_in);
+  void OdomCallback(const nav_msgs::Odometry::ConstPtr &odo_in);
+  void KeypadCallback(const provider_keypad::Keypad::ConstPtr &keypad_in);
+  void KeypadSetGlobal(const provider_keypad::Keypad::ConstPtr &keypad_in);
+  void KeypadSetLocal(const provider_keypad::Keypad::ConstPtr &keypad_in);
+  void KillSwitchCallback(const provider_kill_mission::KillSwitchMsg::ConstPtr &state);
+  bool EnableControlServiceCallback(proc_control::EnableControlRequest &request,
+                                    proc_control::EnableControlResponse &response);
+  bool GetPositionTargetServiceCallback(proc_control::GetPositionTargetRequest &request,
+                                        proc_control::GetPositionTargetResponse &response);
+  bool GlobalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
+                                   proc_control::SetPositionTargetResponse &response);
+  bool LocalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
+                                  proc_control::SetPositionTargetResponse &response);
+  bool EnableThrusterServiceCallback(proc_control::EnableThrustersRequest &request,
+                                     proc_control::EnableThrustersResponse &response);
+  bool ClearWaypointServiceCallback(proc_control::ClearWaypointRequest &request,
+                                     proc_control::ClearWaypointResponse &response);
+  bool SetBoundingBoxServiceCallback(proc_control::SetBoundingBoxRequest &request,
+                                    proc_control::SetBoundingBoxResponse &response);
+  bool ResetBoundingBoxServiceCallback(proc_control::ResetBoundingBoxRequest &request,
+                                    proc_control::ResetBoundingBoxResponse &response);
 
+  bool EvaluateTargetReached(const std::array<double, 6> &target_error);
 
+  std::array<double, 6> GetLocalError(const std::array<double, 6> &global_error);
 
-    private:
-        //==========================================================================
-        // P R I V A T E   M E T H O D S
+  Eigen::Matrix3d EulerToRot(const Eigen::Vector3d &vec);
 
+  double DegreeToRadian(const double &degree);
 
+  //==========================================================================
+  // P R I V A T E   M E M B E R S
 
-        //==========================================================================
-        // P R I V A T E   M E M B E R S
+  ros::NodeHandlePtr nh_;
 
-        ros::NodeHandlePtr nh_;
+  ros::Subscriber navigation_odom_subscriber_;
+  ros::Subscriber target_odometry_subscriber_;
+  ros::Subscriber keypad_subscriber_;
+  ros::Subscriber kill_switch_;
 
-        // Subscriber
-        ros::Subscriber navigation_odom_subscriber_;
-        ros::Subscriber kill_switch_subscriber_;
+  ros::Publisher target_publisher_;
+  ros::Publisher debug_target_publisher_;
+  ros::Publisher target_is_reached_publisher_;
+  ros::Publisher error_publisher_;
 
-        // Publisher
-        ros::Publisher target_publisher_;
-        ros::Publisher debug_target_publisher_;
-        ros::Publisher target_is_reach_publisher;
+  ros::ServiceServer set_global_target_server_;
+  ros::ServiceServer set_local_target_server_;
+  ros::ServiceServer get_target_server_;
+  ros::ServiceServer enable_control_server_;
+  ros::ServiceServer enable_thrusters_server_;
+  ros::ServiceServer clear_waypoint_server_;
+  ros::ServiceServer set_bounding_box_server_;
+  ros::ServiceServer reset_bounding_box_server_;
 
-        // Server
-        ros::ServiceServer set_global_position_target_server_;
-        ros::ServiceServer set_local_position_target_server_;
-        ros::ServiceServer set_local_velocity_target_server_;
-        ros::ServiceServer get_target_server_;
-        ros::ServiceServer enable_control_server_;
-        ros::ServiceServer enable_thrusters_server_;
-        ros::ServiceServer clear_waypoint_server_;
-        ros::ServiceServer set_bounding_box_server_;
-        ros::ServiceServer reset_bounding_box_server_;
+  proc_control::ThrusterManager thruster_manager_;
 
-        proc_control::ThrusterManager thruster_manager_;
+  Control_AUV control_auv_;
 
-        proc_control::Control_AUV control_auv_;
+  OdometryInfo world_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  OdometryInfo targeted_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  OdometryInfo last_targeted_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  OdometryInfo asked_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  std::array<bool, 6> enable_control_;
 
-        proc_control::Trajectory trajectory_x_;
-        proc_control::Trajectory trajectory_y_;
-        proc_control::Trajectory trajectory_z_;
-        proc_control::Trajectory trajectory_roll_;
-        proc_control::Trajectory trajectory_pitch_;
-        proc_control::Trajectory trajectory_yaw_;
+  Trajectory trajectory_yaw;
+  Trajectory trajectory_surge;
+  Trajectory trajectory_sway;
+  Trajectory trajectory_heave;
 
-        OdomInfo world_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-        OdomInfo local_velocity_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-        OdomInfo target_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-        OdomInfo target_velocity_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-        OdomInfo last_target_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-        OdomInfo asked_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  int stability_count_;
+  std::chrono::steady_clock::time_point last_time_;
 
+  mutable std::mutex local_position_mutex;
+};
 
-        int stability_count_;
-
-        mutable std::mutex local_position_mutex_;
-
-    };
-
+inline double ProcControlNode::DegreeToRadian(const double &degree) {
+  return degree * DegreeToRad;
 }
 
+} // namespace proc_control
 
-#endif //PROC_CONTROL_CONTROL_NODE_H
+#endif //PROC_CONTROL_CONTROL_SYSTEM_H
