@@ -36,7 +36,10 @@ namespace proc_control {
 //
 ThrusterManager::ThrusterManager() :
     ConfigManager("Thruster"),
-    constant_reverse_effort_(0.0) {
+    actuation_(6,1),
+    effort_(6,8),
+    actuation_thurster_(8,1),
+    constant_reverse_effort_(0.0){
   // Add all the thrusters
   thruster_list_.push_back(Thruster(1));
   thruster_list_.push_back(Thruster(2));
@@ -49,7 +52,10 @@ ThrusterManager::ThrusterManager() :
 
   ThrusterManager::SetEnable(1);
 
+
   Init();
+
+  SetEfforts();
 }
 
 //------------------------------------------------------------------------------
@@ -58,6 +64,26 @@ ThrusterManager::~ThrusterManager() {}
 
 //==============================================================================
 // C O N F I G M A N A G E R   M E T H O D   S E C T I O N
+
+void ThrusterManager::SetEfforts() {
+
+    std::array<double, 3> effort_lin;
+    std::array<double, 3> effort_rot;
+    int i = 0;
+    for (auto &t : thruster_list_){
+        effort_lin = t.GetLinearEffort();
+        effort_rot = t.GetRotationnalEffort();
+
+        for(int j=0; j < 3; j++){
+            effort_(j, i) = effort_lin[j];
+            effort_(j+3, i) = effort_rot[j];
+        }
+        i++;
+    }
+
+    std::cout << effort_ << std::endl;
+
+}
 
 //-----------------------------------------------------------------------------
 //
@@ -237,6 +263,20 @@ std::array<double, 8> ThrusterManager::Commit(std::array<double, 3> &linear_targ
     i++;
   }
   return thrust_vec;
+}
+
+void ThrusterManager::CommitEigen(std::array<double, 6> actuation){
+    for (int i=0; i < 6; i++){
+        actuation_(i, 0) = actuation[i];
+    }
+
+    actuation_thurster_ = effort_.transpose() * actuation_;
+    int i = 0;
+    for (auto &t : thruster_list_){
+        t.Publish(t.GetID(), (int16_t)actuation_thurster_(i,0));
+        i++;
+    }
+
 }
 
 //-----------------------------------------------------------------------------

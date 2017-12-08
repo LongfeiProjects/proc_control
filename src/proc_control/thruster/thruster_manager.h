@@ -33,6 +33,7 @@
 #include "proc_control/thruster/thruster.h"
 #include "proc_control/config/config_manager.h"
 #include "proc_control/ThrusterConfig.h"
+#include <eigen3/Eigen/Eigen>
 
 namespace proc_control {
 
@@ -59,6 +60,8 @@ class ThrusterManager : public ConfigManager<proc_control::ThrusterConfig> {
   std::array<double, 8> Commit(std::array<double, 3> &linear_effort,
                                std::array<double, 3> &rotational_target);
 
+  void CommitEigen(std::array<double, 6> actuation);
+
   template<typename Tp_>
   inline int signum(Tp_ val) {
     return (Tp_(0) < val) - (val < Tp_(0));
@@ -70,11 +73,15 @@ class ThrusterManager : public ConfigManager<proc_control::ThrusterConfig> {
 
   void WriteEfforts(size_t thruster_index, YAML::Emitter &out);
   void ReadEfforts(const std::string &thruster_name, YAML::Node &node);
+  void SetEfforts();
 
   //==========================================================================
   // P R I V A T E   M E M B E R S
 
   std::vector<proc_control::Thruster> thruster_list_;
+  Eigen::MatrixXd actuation_;
+  Eigen::MatrixXd actuation_thurster_;
+  Eigen::MatrixXd effort_;
   double constant_reverse_effort_;
   const std::string file_path_ = kConfigPath + "thruster" + kConfigExt;
   const std::string CONSTANT_REVERSE_EFFORT = "CONSTANT_REVERSE_EFFORT";
