@@ -30,10 +30,8 @@
 #include <ros/ros.h>
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Pose.h>
-#include <provider_keypad/Keypad.h>
 
 #include <proc_control/PositionTarget.h>
-#include <eigen3/Eigen/Eigen>
 #include <chrono>
 
 #include "proc_control/EnableControl.h"
@@ -47,7 +45,7 @@
 #include "proc_control/ResetBoundingBox.h"
 #include <provider_kill_mission/KillSwitchMsg.h>
 
-#include "proc_control/trajectory/trajectory.h"
+#include "controller_mission/SetManualActuation.h"
 
 #include <mutex>
 
@@ -78,36 +76,13 @@ class ProcControlNode {
 
   void PublishTargetedPosition();
 
-  void SetTargetCallback(const geometry_msgs::Pose::ConstPtr &target_in);
   void OdomCallback(const nav_msgs::Odometry::ConstPtr &odo_in);
-  void KeypadCallback(const provider_keypad::Keypad::ConstPtr &keypad_in);
-  void KeypadSetGlobal(const provider_keypad::Keypad::ConstPtr &keypad_in);
-  void KeypadSetLocal(const provider_keypad::Keypad::ConstPtr &keypad_in);
-  void KillSwitchCallback(const provider_kill_mission::KillSwitchMsg::ConstPtr &state);
   bool EnableControlServiceCallback(proc_control::EnableControlRequest &request,
                                     proc_control::EnableControlResponse &response);
-  bool GetPositionTargetServiceCallback(proc_control::GetPositionTargetRequest &request,
-                                        proc_control::GetPositionTargetResponse &response);
-  bool GlobalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
-                                   proc_control::SetPositionTargetResponse &response);
-  bool LocalTargetServiceCallback(proc_control::SetPositionTargetRequest &request,
-                                  proc_control::SetPositionTargetResponse &response);
+  bool SetManualActuationCallback(controller_mission::SetManualActuationRequest &request,
+                                        controller_mission::SetManualActuationResponse &response);
   bool EnableThrusterServiceCallback(proc_control::EnableThrustersRequest &request,
                                      proc_control::EnableThrustersResponse &response);
-  bool ClearWaypointServiceCallback(proc_control::ClearWaypointRequest &request,
-                                     proc_control::ClearWaypointResponse &response);
-  bool SetBoundingBoxServiceCallback(proc_control::SetBoundingBoxRequest &request,
-                                    proc_control::SetBoundingBoxResponse &response);
-  bool ResetBoundingBoxServiceCallback(proc_control::ResetBoundingBoxRequest &request,
-                                    proc_control::ResetBoundingBoxResponse &response);
-
-  bool EvaluateTargetReached(const std::array<double, 6> &target_error);
-
-  std::array<double, 6> GetLocalError(const std::array<double, 6> &global_error);
-
-  Eigen::Matrix3d EulerToRot(const Eigen::Vector3d &vec);
-
-  double DegreeToRadian(const double &degree);
 
   //==========================================================================
   // P R I V A T E   M E M B E R S
@@ -115,47 +90,29 @@ class ProcControlNode {
   ros::NodeHandlePtr nh_;
 
   ros::Subscriber navigation_odom_subscriber_;
-  ros::Subscriber target_odometry_subscriber_;
-  ros::Subscriber keypad_subscriber_;
-    ros::Subscriber kill_switch_;
 
   ros::Publisher target_publisher_;
-  ros::Publisher debug_target_publisher_;
   ros::Publisher target_is_reached_publisher_;
-  ros::Publisher error_publisher_;
 
-  ros::ServiceServer set_global_target_server_;
-  ros::ServiceServer set_local_target_server_;
-  ros::ServiceServer get_target_server_;
   ros::ServiceServer enable_control_server_;
   ros::ServiceServer enable_thrusters_server_;
-  ros::ServiceServer clear_waypoint_server_;
-  ros::ServiceServer set_bounding_box_server_;
-  ros::ServiceServer reset_bounding_box_server_;
+  ros::ServiceServer manual_actuation_server_;
+
+
 
   AlgorithmManager algorithm_manager_;
   proc_control::ThrusterManager thruster_manager_;
 
   OdometryInfo world_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-  OdometryInfo targeted_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-  OdometryInfo last_targeted_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-  OdometryInfo asked_position_ = {{0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+  double targeted_position_ = 0;
+  double manual_actuation_x_, manual_actuation_y_, manual_actuation_z_, manual_actuation_roll_, manual_actuation_pitch_, manual_actuation_yaw_;
   std::array<bool, 6> enable_control_;
-
-  Trajectory trajectory_yaw;
-  Trajectory trajectory_surge;
-  Trajectory trajectory_sway;
-  Trajectory trajectory_heave;
 
   int stability_count_;
   std::chrono::steady_clock::time_point last_time_;
 
   mutable std::mutex local_position_mutex;
 };
-
-inline double ProcControlNode::DegreeToRadian(const double &degree) {
-  return degree * DegreeToRad;
-}
 
 } // namespace proc_control
 
