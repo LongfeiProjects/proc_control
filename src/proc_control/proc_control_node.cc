@@ -107,18 +107,18 @@ void ProcControlNode::Control() {
     std::array<double, 3> actuation_lin = {actuation[X], actuation[Y], actuation[Z]};
     std::array<double, 3> actuation_rot = {actuation[ROLL], actuation[PITCH], actuation[YAW]};
 
-    if (!enable_control_[Z])  actuation_lin[Z] = 0.0f;
+    if (!enable_control_[Z])  actuation[Z] = 0.0f;
 
     if (enable_control_[X])
         actuation[X] = manual_actuation_x_;
     if (enable_control_[Y])
-        actuation_lin[Y] = manual_actuation_y_;
+        actuation[Y] = manual_actuation_y_;
     if (enable_control_[ROLL])
-        actuation_rot[ROLL] = manual_actuation_roll_;
+        actuation[ROLL] = manual_actuation_roll_;
     if (enable_control_[PITCH])
-        actuation_rot[PITCH] = manual_actuation_pitch_;
+        actuation[PITCH] = manual_actuation_pitch_;
     if (enable_control_[YAW])
-        actuation_rot[YAW] = manual_actuation_yaw_;
+        actuation[YAW] = manual_actuation_yaw_;
 
     // Process the actuation
     thruster_manager_.CommitEigen(actuation);
