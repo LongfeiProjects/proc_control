@@ -5,20 +5,19 @@
 #ifndef PROC_CONTROL_DYNAMICPARAMETERS_H
 #define PROC_CONTROL_DYNAMICPARAMETERS_H
 
-#include <eigen3/Eigen/Eigen>
-
 #include "proc_control/property.h"
 #include "proc_control/config/config_manager.h"
 #include "proc_control/DynamicParametersConfig.h"
+#include "proc_control/DynamicModel/DynamicModelParameters.h"
 
 
 namespace proc_control{
 
-    class DynamicModelParameters : public ConfigManager<DynamicParametersConfig> {
+    class DynamicModelManager : public ConfigManager<DynamicParametersConfig> {
     public:
 
-        DynamicModelParameters(const std::string &axe_name);
-        ~DynamicModelParameters();
+        DynamicModelManager(const std::string &axe_name, std::shared_ptr<DynamicModelParameters> &dynamicModelParameters);
+        ~DynamicModelManager() = default;
 
         void OnDynamicReconfigureChange(const DynamicParametersConfig &config ) override;
 
@@ -26,13 +25,10 @@ namespace proc_control{
 
         void ReadConfigFile( DynamicParametersConfig &config ) override;
 
-        Eigen::VectorXd drag_coefficient_;
-        Eigen::Vector3d buoyancy_center_;
-        Eigen::Vector3d
-
     private:
 
         std::string file_path_;
+        std::shared_ptr<DynamicModelParameters> dynamicModelParameters_;
 
 
     };
