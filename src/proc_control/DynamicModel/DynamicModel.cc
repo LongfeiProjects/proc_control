@@ -42,8 +42,6 @@ namespace proc_control {
             DampingMatrix_(i, i) = 0.5 * dynamicModelParameters_->waterDensity * drag[i];
         }
 
-        std::cout << "Damping :\n" << DampingMatrix_ << std::endl;
-
     }
 
     void DynamicModel::ComputeGravityVector(Eigen::Vector3d &orientation) {

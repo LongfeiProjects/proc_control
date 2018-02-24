@@ -125,7 +125,7 @@ namespace proc_control {
 
         dynamicModel_.ComputeDynamicModel(world_velocity_, world_orientation_, world_acceleration_);
 
-        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::seconds>(now_time - last_time_).count());
+        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::nanoseconds>(now_time - last_time_).count()) / (double(1E9));
 
         if (deltaTime_s > (0.0001f)) {
 

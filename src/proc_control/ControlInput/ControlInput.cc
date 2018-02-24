@@ -43,7 +43,7 @@ namespace proc_control{
 
         std::chrono::steady_clock::time_point time_now = std::chrono::steady_clock::now();
 
-        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::seconds>(time_now - last_time_).count());
+        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::seconds>(time_now - last_time_).count())  / (double(1E9));
 
         for(int i = 0; i < 3; i++){
             linearAcceleration_[i]  = (linearVelocity_[i] - lastLinearVelocity_[i]) / deltaTime_s;
