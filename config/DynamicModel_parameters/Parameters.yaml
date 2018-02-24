@@ -1,24 +1,21 @@
-Water_Density : 1000.0
-Auv_Mass      : 49.5
-Auv_volume    : 0.00283496207
-X_surface     : 0.1241
-Y_surface     : 0.1241
-Z_surface     : 0.2482
-ROLL_surface  : 0.0
-PITCH_surface : 0.0
-YAW_surface   : 0.068
-
-ixx : 1.99
-iyy : 3.045
-izz : 1.702
-
-Buoyancy_center_x : 0
-Buoyancy_center_y : 0
-Buoyancy_center_z : 0
-
-cd_x     : 3.81
-cd_y     : 4.79
-cd_z     : 0.00
-cd_roll  : 0.00
-cd_pitch : 0.00
-cd_yaw   : 0.05
+Water_Density: 1000
+Auv_Mass: 49.5
+Auv_volume: 0.00283496207
+X_surface: 0.1241
+Y_surface: 0.1241
+Z_surface: 0.2482
+ROLL_surface: 0
+PITCH_surface: 0
+YAW_surface: 0.068
+ixx: 0
+iyy: 0
+izz: 0
+Buoyancy_center_x: 0
+Buoyancy_center_y: 0
+Buoyancy_center_z: 0
+cd_x: 0
+cd_y: 0
+cd_z: 0
+cd_roll: 0
+cd_pitch: 0
+cd_yaw: 0

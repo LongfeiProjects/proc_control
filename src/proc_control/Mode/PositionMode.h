@@ -12,6 +12,7 @@
 #include "proc_control/Mode/ControlModeIf.h"
 #include "proc_control/Transformation/Transformation.h"
 #include "proc_control/algorithm/ControlAUV.h"
+#include "proc_control/DynamicModel/DynamicModel.h"
 
 #include "proc_control/PositionTarget.h"
 #include "proc_control/EnableThrusters.h"
@@ -26,6 +27,7 @@ namespace proc_control {
     public:
 
         typedef Eigen::Matrix<double, 6, 1> EigenVector6d;
+        const int CARTESIAN_SPACE = 6;
 
         explicit PositionMode(const ros::NodeHandlePtr &nh);
 
@@ -106,12 +108,17 @@ namespace proc_control {
         Eigen::Vector3d world_position_;
         Eigen::Vector3d world_orientation_;
 
+        Eigen::VectorXd world_velocity_;
+        Eigen::VectorXd world_acceleration_;
+
         proc_control::Transformation ComputeTransformation_;
 
         proc_control::Trajectory linear_trajectory_;
         proc_control::Trajectory angular_trajectory_;
 
         std::chrono::steady_clock::time_point last_time_;
+
+        proc_control::DynamicModel dynamicModel_;
 
         int stability_count_;
 

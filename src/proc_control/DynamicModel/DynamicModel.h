@@ -19,14 +19,14 @@ namespace proc_control{
         const int CARTESIAN_SPACE = 6;
 
         DynamicModel();
-        ~DynamicModel();
+        ~DynamicModel() = default;
 
-        Eigen::VectorXd ComputeDynamicModel(Eigen::VectorXd &velocity, Eigen::VectorXd &position, Eigen::VectorXd &acceleration);
+        Eigen::VectorXd ComputeDynamicModel(Eigen::VectorXd &velocity, Eigen::Vector3d &orientation, Eigen::VectorXd &acceleration);
 
     private:
 
         void ComputeDampingMatrix(Eigen::VectorXd &velocity);
-        void ComputeGravityVector(Eigen::VectorXd &position);
+        void ComputeGravityVector(Eigen::Vector3d &orientation);
 
         Eigen::MatrixXd DampingMatrix_;
         Eigen::VectorXd GravityVector_;

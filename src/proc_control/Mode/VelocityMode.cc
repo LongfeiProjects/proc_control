@@ -70,7 +70,7 @@ namespace proc_control{
     }
 
     void VelocityMode::UpdateInput() {
-        world_twist_ << inputData_.GetVelocityTranslation(), inputData_.GetVelocityOrientation();
+        world_twist_ << inputData_.GetLinearVelocity(), inputData_.GetAngularVelocity();
     }
 
     void VelocityMode::CurrentTargetVelocityPublisher() {

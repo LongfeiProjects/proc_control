@@ -42,6 +42,8 @@ namespace proc_control {
         orientation_target_ = Eigen::Vector3d::Zero();
         world_position_ = Eigen::Vector3d::Zero();
         world_orientation_ = Eigen::Vector3d::Zero();
+        world_velocity_ = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
+        world_acceleration_ = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
 
         linear_trajectory_.ResetSpline();
         angular_trajectory_.ResetSpline();
@@ -121,9 +123,9 @@ namespace proc_control {
 
         UpdateInput();
 
-        auto diff = now_time - last_time_;
+        dynamicModel_.ComputeDynamicModel(world_velocity_, world_orientation_, world_acceleration_);
 
-        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count()) / (double(1E9));
+        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::seconds>(now_time - last_time_).count());
 
         if (deltaTime_s > (0.0001f)) {
 
@@ -259,8 +261,10 @@ namespace proc_control {
 
 
     void PositionMode::UpdateInput() {
-        world_position_ = inputData_.GetPositionTranslation();
-        world_orientation_ = inputData_.GetPositionOrientation();
+        world_position_ = inputData_.GetLinearPosition();
+        world_orientation_ = inputData_.GetAngularPosition();
+        world_velocity_ << inputData_.GetLinearVelocity(), inputData_.GetAngularVelocity();
+        world_acceleration_ << inputData_.GetLinearAcceleration(), inputData_.GetAngularAcceleration();
     }
 
 

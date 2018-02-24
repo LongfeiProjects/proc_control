@@ -34,14 +34,16 @@ public:
 };
 
 inline void DynamicModelParameters::Init() {
-    dragCoefficient = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
-    buoyancyCenter  = Eigen::Vector3d::Zero();
-    auvSurface      = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
-    inertiaTensor   = Eigen::Matrix3d::Zero();
-    addMassTensor   = Eigen::MatrixXd::Zero(CARTESIAN_SPACE, CARTESIAN_SPACE);
-    waterDensity    = 0.0;
-    auvMass         = 0.0;
-    auvVolume       = 0.0;
+    dragCoefficient   = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
+    buoyancyCenter    = Eigen::Vector3d::Zero();
+    auvSurface        = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
+    inertiaTensor     = Eigen::Matrix3d::Zero();
+    addMassTensor     = Eigen::MatrixXd::Zero(CARTESIAN_SPACE, CARTESIAN_SPACE);
+    massInertiaMatrix = Eigen::MatrixXd::Zero(CARTESIAN_SPACE, CARTESIAN_SPACE);
+    massMatrix        = Eigen::MatrixXd::Zero(CARTESIAN_SPACE, CARTESIAN_SPACE);
+    waterDensity      = 0.0;
+    auvMass           = 0.0;
+    auvVolume         = 0.0;
 }
 
 inline void DynamicModelParameters::ComputeMassMatrix() {

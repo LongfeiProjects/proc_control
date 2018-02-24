@@ -15,16 +15,16 @@ namespace proc_control {
         GravityVector_     = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
     }
 
-    DynamicModel::~DynamicModel() {}
-
-    Eigen::VectorXd DynamicModel::ComputeDynamicModel(Eigen::VectorXd &velocity, Eigen::VectorXd &position, Eigen::VectorXd &acceleration) {
+    Eigen::VectorXd DynamicModel::ComputeDynamicModel(Eigen::VectorXd &velocity, Eigen::Vector3d &orientation, Eigen::VectorXd &acceleration) {
 
         Eigen::VectorXd cartesianThrust = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
         ComputeDampingMatrix(velocity);
-        ComputeGravityVector(position);
+        ComputeGravityVector(orientation);
 
         cartesianThrust = dynamicModelParameters_->massMatrix * acceleration + DampingMatrix_ * velocity;
         cartesianThrust += GravityVector_;
+
+
 
         return cartesianThrust;
 
@@ -42,22 +42,22 @@ namespace proc_control {
             DampingMatrix_(i, i) = 0.5 * dynamicModelParameters_->waterDensity * drag[i];
         }
 
+        std::cout << "Damping :\n" << DampingMatrix_ << std::endl;
+
     }
 
-    void DynamicModel::ComputeGravityVector(Eigen::VectorXd &position) {
+    void DynamicModel::ComputeGravityVector(Eigen::Vector3d &orientation) {
 
         Eigen::VectorXd buoyancy_center = dynamicModelParameters_->buoyancyCenter;
         double buoyancy = dynamicModelParameters_->auvBuoyancy;
         double resulting_force = buoyancy - dynamicModelParameters_->auvWeight;
 
-        GravityVector_[X] = resulting_force  * sin(position[PITCH]);
-        GravityVector_[Y] = -resulting_force * sin(position[ROLL]) * cos(position[PITCH]);
-        GravityVector_[Z] = -resulting_force * cos(position[ROLL]) * cos(position[PITCH]);
+        GravityVector_[X] = resulting_force  * sin(orientation[Y]);
+        GravityVector_[Y] = -resulting_force * sin(orientation[X]) * cos(orientation[Y]);
+        GravityVector_[Z] = -resulting_force * cos(orientation[X]) * cos(orientation[Y]);
 
-        GravityVector_[ROLL]  = buoyancy  * cos(position[PITCH]) * (buoyancy_center[Z] * sin(position[ROLL]) - buoyancy_center[Y] * cos(position[ROLL]));
-        GravityVector_[PITCH] = buoyancy  * (buoyancy_center[X] * cos(position[ROLL]) * cos(position[PITCH]) - buoyancy_center[Z] * sin(position[PITCH]));
-        GravityVector_[YAW]   = -buoyancy * (buoyancy_center[X] * sin(position[ROLL]) * cos(position[PITCH]) - buoyancy_center[Y] * sin(position[PITCH]));
-
-
+        GravityVector_[ROLL]  = buoyancy  * cos(orientation[Y]) * (buoyancy_center[Z] * sin(orientation[X]) - buoyancy_center[Y] * cos(orientation[X]));
+        GravityVector_[PITCH] = buoyancy  * (buoyancy_center[X] * cos(orientation[X]) * cos(orientation[Y]) - buoyancy_center[Z] * sin(orientation[Y]));
+        GravityVector_[YAW]   = -buoyancy * (buoyancy_center[X] * sin(orientation[X]) * cos(orientation[Y]) - buoyancy_center[Y] * sin(orientation[Y]));
     }
 }
