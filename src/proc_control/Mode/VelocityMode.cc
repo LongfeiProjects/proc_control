@@ -33,22 +33,20 @@ namespace proc_control{
 
     void VelocityMode::Process(){
 
-        EigenVector6d local_error = EigenVector6d::Zero();
+        Eigen::VectorXd local_error = Eigen::VectorXd::Zero(6);
 
         std::chrono::steady_clock::time_point now_time = std::chrono::steady_clock::now();
 
         UpdateInput();
 
-        auto diff = now_time - last_time_;
-
-        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count()) / (double(1E9));
+        double deltaTime_s = double(std::chrono::duration_cast<std::chrono::nanoseconds>(now_time - last_time_).count()) / (double(1E9));
 
         if (deltaTime_s > (0.0001f)) {
 
             local_error = twist_target_;
             local_error[Z] = twist_target_[Z] - world_twist_[Z];
 
-            EigenVector6d actuation = EigenVector6d::Zero();
+            Eigen::VectorXd actuation = Eigen::VectorXd::Zero(6);
             actuation = control_auv_.GetActuationForError(local_error);
 
             for (int i = 0; i < 6; i++) {

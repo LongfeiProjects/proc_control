@@ -31,9 +31,9 @@ namespace proc_control{
                                                     z_(ControllerType::PID_, "z", mode), roll_(ControllerType::PID_, "roll", mode),
                                                     pitch_(ControllerType::PID_, "pitch", mode), yaw_(ControllerType::PID_, "yaw", mode) {}
 
-    ControlAUV::EigenVector6d ControlAUV::GetActuationForError(EigenVector6d &error){
+    Eigen::VectorXd ControlAUV::GetActuationForError(Eigen::VectorXd &error){
 
-        EigenVector6d actuation;
+        Eigen::VectorXd actuation = Eigen::VectorXd::Zero(6);
 
         actuation[0] = x_.CalculateActuationForError(error[0]);
         actuation[1] = y_.CalculateActuationForError(error[1]);
@@ -46,7 +46,7 @@ namespace proc_control{
 
     }
 
-    bool ControlAUV::IsInBoundingBox(EigenVector6d &error) {
+    bool ControlAUV::IsInBoundingBox(const Eigen::VectorXd &error) {
 
         double BBox_x = x_.GetAxisBbox();
         double BBox_y = y_.GetAxisBbox();
@@ -60,7 +60,7 @@ namespace proc_control{
 
     }
 
-    void ControlAUV::SetNewBoundingBox(EigenVector6d BBox) {
+    void ControlAUV::SetNewBoundingBox(const Eigen::VectorXd &BBox) {
         x_.SetAxisBbox(BBox[0]);
         y_.SetAxisBbox(BBox[1]);
         z_.SetAxisBbox(BBox[2]);

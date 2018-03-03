@@ -43,11 +43,11 @@ namespace proc_control{
 
         ~ControlAUV() = default;
 
-        EigenVector6d GetActuationForError(EigenVector6d &error);
+        Eigen::VectorXd GetActuationForError(Eigen::VectorXd &error);
 
-        bool IsInBoundingBox(EigenVector6d &error);
+        bool IsInBoundingBox(const Eigen::VectorXd &error);
 
-        void SetNewBoundingBox(EigenVector6d BBox);
+        void SetNewBoundingBox(const Eigen::VectorXd &BBox);
         void ResetBoundingBox();
 
     private:

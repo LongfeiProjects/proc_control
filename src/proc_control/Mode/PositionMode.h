@@ -61,18 +61,18 @@ namespace proc_control {
 
         void SetGlobalTarget(Eigen::Vector3d &translation, Eigen::Vector3d &orientation);
 
-        bool EvaluateTargetReached(EigenVector6d &ask_position);
+        bool EvaluateTargetReached(const Eigen::VectorXd &ask_position);
 
         void HandleEnableDisableControl(bool state, double target, const size_t axis);
 
-        void LocalErrorPublisher(EigenVector6d &error);
-        void CurrentCommandDebugPublisher(EigenVector6d &command);
+        void LocalErrorPublisher(const Eigen::VectorXd &error);
+        void CurrentCommandDebugPublisher(const Eigen::VectorXd &command);
         void CurrentTargetPositionPublisher();
         void CurrentTargetDebugPositionPublisher();
 
         void UpdateInput();
 
-        EigenVector6d GetLocalError(Eigen::Vector3d &translation, Eigen::Vector3d &orientation, double dt);
+        Eigen::VectorXd GetLocalError(Eigen::Vector3d &translation, Eigen::Vector3d &orientation);
 
         ros::NodeHandlePtr nh_;
 

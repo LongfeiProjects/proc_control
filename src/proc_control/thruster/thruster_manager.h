@@ -59,7 +59,7 @@ class ThrusterManager : public ConfigManager<proc_control::ThrusterConfig> {
     // P U B L I C   M E T H O D S
 
     void SetEnable(bool isEnable);
-    void Commit(EigenVector6d &actuation);
+    void Commit(const Eigen::VectorXd &actuation);
 
     template<typename Tp_>
     inline int signum(Tp_ val) {

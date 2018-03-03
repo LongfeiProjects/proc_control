@@ -64,7 +64,7 @@ namespace proc_control {
 
     }
 
-    void PositionMode::LocalErrorPublisher(EigenVector6d &error) {
+    void PositionMode::LocalErrorPublisher(const Eigen::VectorXd &error) {
 
         proc_control::PositionTarget error_;
         error_.X = error[X];
@@ -92,7 +92,7 @@ namespace proc_control {
 
     }
 
-    void PositionMode::CurrentCommandDebugPublisher(EigenVector6d &command) {
+    void PositionMode::CurrentCommandDebugPublisher(const Eigen::VectorXd &command) {
 
         proc_control::PositionTarget current_command;
 
@@ -120,13 +120,14 @@ namespace proc_control {
 
     void PositionMode::Process() {
 
-        EigenVector6d local_error = EigenVector6d::Zero();
+        Eigen::VectorXd local_error = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
+        Eigen::VectorXd cartesian_thrust = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
 
         std::chrono::steady_clock::time_point now_time = std::chrono::steady_clock::now();
 
         UpdateInput();
 
-        dynamicModel_.ComputeDynamicModel(world_velocity_, world_orientation_, world_acceleration_);
+
 
         double deltaTime_s = double(std::chrono::duration_cast<std::chrono::nanoseconds>(now_time - last_time_).count()) / (double(1E9));
 
@@ -141,7 +142,7 @@ namespace proc_control {
 
             CurrentTargetDebugPositionPublisher();
 
-            local_error = GetLocalError(position_target_, orientation_target_, deltaTime_s);
+            local_error = GetLocalError(position_target_, orientation_target_);
             LocalErrorPublisher(local_error);
 
             proc_control::TargetReached msg_target_reached;
@@ -149,18 +150,23 @@ namespace proc_control {
             targetIsReachedPublisher_.publish(msg_target_reached);
 
             // Calculate required actuation
-            EigenVector6d actuation = EigenVector6d::Zero();
-            actuation = control_auv_.GetActuationForError(local_error);
+            Eigen::VectorXd command = Eigen::VectorXd::Zero(6);
+            Eigen::VectorXd cartesian_acceleration = Eigen::VectorXd::Zero(6);
+            cartesian_acceleration << position_trajectory_[2], Eigen::Vector3d::Zero();
 
-            LocalErrorPublisher(local_error);
+            command = control_auv_.GetActuationForError(local_error);
+
+            cartesian_acceleration = command + cartesian_acceleration;
+
+            cartesian_thrust = dynamicModel_.ComputeDynamicModel(world_velocity_, world_orientation_, cartesian_acceleration);
 
             for (int i = 0; i < 6; i++) {
-                if (!enable_axis_controller_[i]) actuation[i] = 0.0f;
+                if (!enable_axis_controller_[i]) cartesian_thrust[i] = 0.0f;
             }
 
-            CurrentCommandDebugPublisher(actuation);
+            CurrentCommandDebugPublisher(cartesian_thrust);
 
-            thruster_manager_.Commit(actuation);
+            thruster_manager_.Commit(cartesian_thrust);
 
         }
 
@@ -225,11 +231,11 @@ namespace proc_control {
 
     }
 
-    PositionMode::EigenVector6d PositionMode::GetLocalError(Eigen::Vector3d &translation, Eigen::Vector3d &orientation, double dt) {
+    Eigen::VectorXd PositionMode::GetLocalError(Eigen::Vector3d &translation, Eigen::Vector3d &orientation) {
 
         Eigen::Affine3d local_error_h;
 
-        EigenVector6d local_error = EigenVector6d::Zero();
+        Eigen::VectorXd local_error = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
 
         UpdateInput();
 
@@ -245,7 +251,7 @@ namespace proc_control {
 
     }
 
-    bool PositionMode::EvaluateTargetReached(EigenVector6d &ask_position) {
+    bool PositionMode::EvaluateTargetReached(const Eigen::VectorXd &ask_position) {
 
         EigenVector6d actual_pose = EigenVector6d::Zero();
         EigenVector6d error;
@@ -384,7 +390,7 @@ namespace proc_control {
 
     bool PositionMode::SetBoundingBoxServiceCallback(proc_control::SetBoundingBoxRequest &request,
                                                         proc_control::SetBoundingBoxResponse &response){
-        EigenVector6d bbox;
+        Eigen::VectorXd bbox = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
         bbox << request.X, request.Y, request.Z, request.ROLL, request.PITCH, request.YAW;
         control_auv_.SetNewBoundingBox(bbox);
         return true;
