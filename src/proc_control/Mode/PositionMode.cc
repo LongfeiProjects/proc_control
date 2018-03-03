@@ -6,7 +6,7 @@
 
 namespace proc_control {
 
-    PositionMode::PositionMode(const ros::NodeHandlePtr &nh) : nh_(nh), control_auv_("position"), inputData_(nh)  {
+    PositionMode::PositionMode(const ros::NodeHandlePtr &nh) : nh_(nh), control_auv_("position"), inputData_(nh), position_trajectory_(3)  {
 
         for (int i = 0; i < 6; i++){
             enable_axis_controller_[i] = false;
@@ -44,6 +44,9 @@ namespace proc_control {
         world_orientation_ = Eigen::Vector3d::Zero();
         world_velocity_ = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
         world_acceleration_ = Eigen::VectorXd::Zero(CARTESIAN_SPACE);
+        position_trajectory_.push_back(Eigen::Vector3d::Zero());
+        position_trajectory_.push_back(Eigen::Vector3d::Zero());
+        position_trajectory_.push_back(Eigen::Vector3d::Zero());
 
         linear_trajectory_.ResetSpline();
         angular_trajectory_.ResetSpline();
@@ -130,9 +133,11 @@ namespace proc_control {
         if (deltaTime_s > (0.0001f)) {
 
             if (linear_trajectory_.IsSplineCalculated())
-                position_target_ = linear_trajectory_.ComputeLinearSpline(deltaTime_s);
+                position_trajectory_ = linear_trajectory_.ComputeLinearSpline(deltaTime_s);
             if (angular_trajectory_.IsSplineCalculated())
                 orientation_target_ = angular_trajectory_.ComputeAngularSpline(deltaTime_s);
+
+            position_target_ = position_trajectory_[0];
 
             CurrentTargetDebugPositionPublisher();
 

@@ -34,11 +34,7 @@ namespace proc_control{
 
 //------------------------------------------------------------------------------
 //
-    Trajectory::Trajectory() {
-        is_spline_calculated_ = false;
-        spline_time_ = 0;
-        zero_ << 0.0, 0.0, 0.0;
-    }
+    Trajectory::Trajectory(): current_trajectory_(3), is_spline_calculated_(false), spline_time_(0.0) { zero_ << 0.0, 0.0, 0.0; }
 
 //------------------------------------------------------------------------------
 //
@@ -62,7 +58,7 @@ namespace proc_control{
 
 //-----------------------------------------------------------------------------
 //
-    Eigen::Vector3d Trajectory::ComputeLinearSpline(double dt) {
+    std::vector<Eigen::Vector3d> Trajectory::ComputeLinearSpline(double dt) {
 
         spline_time_ += dt/5;
 
@@ -70,7 +66,7 @@ namespace proc_control{
 
         ComputeHermiteCubicSpline(this->initial_position_, this->final_position_);
 
-        return current_position_;
+        return current_trajectory_;
     }
 //-----------------------------------------------------------------------------
 //
@@ -80,27 +76,26 @@ namespace proc_control{
 
         if (spline_time_ >= 1.0) spline_time_ = 1.0;
 
-        current_position_ = ComputeSlerpInterpolation(this->initial_position_, this->final_position_);
+        ComputeSlerpInterpolation(this->initial_position_, this->final_position_);
 
-        return current_position_;
+        return current_orientation_;
     }
 //-----------------------------------------------------------------------------
 //
-    Eigen::Vector3d Trajectory::ComputeHermiteCubicSpline(Eigen::Vector3d &pO, Eigen::Vector3d &p1) {
+    void Trajectory::ComputeHermiteCubicSpline(Eigen::Vector3d &p0, Eigen::Vector3d &p1) {
 
         double spline_time_squared = spline_time_ * spline_time_ ;
         double spline_time_cubed = spline_time_squared * spline_time_;
 
-        current_position_ = (2 * spline_time_cubed - 3 * spline_time_squared + 1) * pO
-                            + (-2 * spline_time_cubed + 3 * spline_time_squared) * p1;
-
-        return current_position_;
+        current_trajectory_[0] = (2 * spline_time_cubed - 3 * spline_time_squared + 1) * p0 + (-2 * spline_time_cubed + 3 * spline_time_squared) * p1;
+        current_trajectory_[1] = 6 * (p0 - p1) * spline_time_squared - 6 * (p0 - p1) * spline_time_;
+        current_trajectory_[2] = 12 * (p0 - p1) * spline_time_ - 6 * (p0 - p1);
 
     }
 
     //-----------------------------------------------------------------------------
 //
-    Eigen::Vector3d Trajectory::ComputeSlerpInterpolation(Eigen::Vector3d &pO, Eigen::Vector3d &p1) {
+    void Trajectory::ComputeSlerpInterpolation(Eigen::Vector3d &pO, Eigen::Vector3d &p1) {
 
         Eigen::Affine3d pO_h = ComputeTransformation_.HomogeneousMatrix(pO, zero_);
         Eigen::Affine3d p1_h = ComputeTransformation_.HomogeneousMatrix(p1, zero_);
@@ -112,8 +107,6 @@ namespace proc_control{
 
         current_orientation_ = p1_q.toRotationMatrix().eulerAngles(0, 1, 2);
 
-        return current_orientation_;
-
     }
 
 
@@ -124,7 +117,7 @@ namespace proc_control{
         spline_time_ = 0.0;
         initial_position_ = zero_;
         final_position_ = zero_;
-        current_position_ = zero_;
+        current_orientation_ = zero_;
         is_spline_calculated_ = false;
     }
 

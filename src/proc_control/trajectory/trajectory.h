@@ -45,21 +45,21 @@ namespace proc_control{
             void SetSplineParameters(Eigen::Vector3d &initial_position, Eigen::Vector3d &finale_position);
             bool IsSplineCalculated();
             void ResetSpline();
-            Eigen::Vector3d ComputeLinearSpline(double dt);
+            std::vector<Eigen::Vector3d> ComputeLinearSpline(double dt);
             Eigen::Vector3d ComputeAngularSpline(double dt);
 
 
         private:
             //==========================================================================
             // P R I V A T E   M E T H O D S
-            Eigen::Vector3d ComputeHermiteCubicSpline(Eigen::Vector3d &pO, Eigen::Vector3d &p1);
-            Eigen::Vector3d ComputeSlerpInterpolation(Eigen::Vector3d &pO, Eigen::Vector3d &p1);
+            void ComputeHermiteCubicSpline(Eigen::Vector3d &p0, Eigen::Vector3d &p1);
+            void ComputeSlerpInterpolation(Eigen::Vector3d &pO, Eigen::Vector3d &p1);
 
             //==========================================================================
             // P R I V A T E   M E M B E R S
 
             Eigen::Vector3d initial_position_, final_position_;
-            Eigen::Vector3d current_position_;
+            std::vector<Eigen::Vector3d> current_trajectory_;
             Eigen::Vector3d current_orientation_;
 
             proc_control::Transformation ComputeTransformation_;

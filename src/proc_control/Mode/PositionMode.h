@@ -103,6 +103,7 @@ namespace proc_control {
         Eigen::Matrix<bool, 6, 1> enable_axis_controller_;
 
         Eigen::Vector3d position_target_;
+        std::vector<Eigen::Vector3d> position_trajectory_;
         Eigen::Vector3d orientation_target_;
 
         Eigen::Vector3d world_position_;
