@@ -238,13 +238,13 @@ namespace proc_control {
 
         local_error[ROLL] = 0.0;
         local_error[PITCH] = 0.0;
-        if (fabs(orientation[YAW] - world_position_[YAW]) > 180) {
-            local_error[YAW] = fmod(orientation[YAW] + (360 - world_position_[YAW]), 360.0);
+        if (fabs(orientation[YAW] - world_orientation_[2]) > 180) {
+            local_error[YAW] = fmod(orientation[YAW] + (360 - world_orientation_[2]), 360.0);
             if (local_error[YAW] > 180) {
                 local_error[YAW] -= 360;
             }
         } else {
-            local_error[YAW] = orientation[YAW] - world_position_[YAW];
+            local_error[YAW] = orientation[YAW] - world_orientation_[2];
         }
 
         return local_error;
